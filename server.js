@@ -1,5 +1,6 @@
 require('dotenv').config();
 
+const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const { initDb } = require('./database/db');
@@ -34,7 +35,11 @@ app.use((req, res, next) => {
   next();
 });
 
-app.get('/', (req, res) => {
+// The frontend (HTML, CSS and JavaScript in the public folder) is served by this same
+// server, so the browser and the API share one origin and cookies work without CORS.
+app.use(express.static(path.join(__dirname, 'public')));
+
+app.get('/health', (req, res) => {
   res.json({ message: 'Pet Care Backend is running' });
 });
 

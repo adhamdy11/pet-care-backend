@@ -75,8 +75,8 @@ test('server refuses to start without JWT_SECRET', () => {
   assert.match(result.stderr, /JWT_SECRET is not set/);
 });
 
-test('GET / works and security headers are set', async () => {
-  const res = await api('GET', '/');
+test('GET /health works and security headers are set', async () => {
+  const res = await api('GET', '/health');
   assert.strictEqual(res.status, 200);
   assert.strictEqual(res.body.message, 'Pet Care Backend is running');
   assert.strictEqual(res.headers.get('x-powered-by'), null);
@@ -84,6 +84,16 @@ test('GET / works and security headers are set', async () => {
   assert.strictEqual(res.headers.get('x-frame-options'), 'DENY');
   assert.ok(res.headers.get('content-security-policy'));
   assert.ok(res.headers.get('strict-transport-security'));
+});
+
+test('GET / serves the frontend with a strict Content-Security-Policy', async () => {
+  const res = await api('GET', '/');
+  assert.strictEqual(res.status, 200);
+  assert.match(res.headers.get('content-type'), /text\/html/);
+  const csp = res.headers.get('content-security-policy');
+  assert.match(csp, /script-src 'self'/);
+  assert.match(csp, /frame-ancestors 'none'/);
+  assert.doesNotMatch(csp, /unsafe-inline/);
 });
 
 test('unknown route returns JSON 404', async () => {
