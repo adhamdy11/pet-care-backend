@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Log in - PetCare</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/js/theme.js"></script>
+</head>
+<body class="auth-page">
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="logo" href="/">Pet<span>Care</span></a>
+    </div>
+  </header>
+
+  <main>
+    <div class="card">
+      <h1>Log in</h1>
+      <div id="message" class="message hidden"></div>
+
+      <form id="login-form" novalidate>
+        <label>Email
+          <input type="email" id="email" autocomplete="email" maxlength="254" required>
+        </label>
+        <label>Password
+          <input type="password" id="password" autocomplete="current-password" maxlength="72" required>
+        </label>
+        <button type="submit" id="login-button">Log in</button>
+      </form>
+
+      <p class="auth-switch">No account yet? <a href="/signup.html">Sign up</a></p>
+    </div>
+  </main>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/login.js"></script>
+</body>
+</html>
