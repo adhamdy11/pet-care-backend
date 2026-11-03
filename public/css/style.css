@@ -8,6 +8,7 @@
   --primary: #0f766e;
   --primary-hover: #0b5d57;
   --primary-soft: #dff1ee;
+  --on-primary: #ffffff;
   --danger: #b42318;
   --danger-soft: #fdecea;
   --success-soft: #e3f4e8;
@@ -26,6 +27,7 @@
   --primary: #2bb3a5;
   --primary-hover: #4fc8bb;
   --primary-soft: #183a37;
+  --on-primary: #0b1f1d;
   --danger: #f2877c;
   --danger-soft: #3d2220;
   --success-soft: #1c3424;
@@ -161,6 +163,11 @@ main {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
+  align-items: start;
+}
+
+.grid-2 .card {
+  margin-bottom: 0;
 }
 
 .stats {
@@ -250,7 +257,7 @@ button, .button {
   border: 1px solid var(--primary);
   border-radius: 6px;
   background: var(--primary);
-  color: #fff;
+  color: var(--on-primary);
   cursor: pointer;
   text-decoration: none;
 }
@@ -389,6 +396,26 @@ td.actions button {
   color: var(--warning-text);
 }
 
+.item-list .form-actions {
+  margin-top: 6px;
+}
+
+.check-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.inline-check {
+  display: inline-block;
+  width: auto;
+  margin: 0;
+  accent-color: var(--primary);
+}
+
 .done-text {
   text-decoration: line-through;
   color: var(--muted);
@@ -476,12 +503,18 @@ td.actions button {
     grid-template-columns: 1fr 1fr;
   }
 
+  /* Logo and user buttons on the first line, navigation links on the second. */
   .header-user {
-    width: 100%;
-    justify-content: space-between;
+    margin-left: auto;
   }
 
-  td.actions {
-    white-space: normal;
+  .main-nav {
+    order: 3;
+    flex-basis: 100%;
+  }
+
+  /* Tables keep a readable width and scroll sideways inside their card. */
+  table {
+    min-width: 640px;
   }
 }
