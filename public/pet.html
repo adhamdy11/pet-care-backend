@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pet details - PetCare</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/js/theme.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="logo" href="/dashboard.html">Pet<span>Care</span></a>
+      <nav class="main-nav">
+        <a href="/dashboard.html">Dashboard</a>
+        <a href="/pets.html" aria-current="page">My Pets</a>
+        <a href="/appointments.html">Appointments</a>
+        <a href="/admin.html" id="admin-link" class="hidden">Admin</a>
+      </nav>
+      <div class="header-user">
+        <span id="header-username"></span>
+        <button type="button" id="theme-button" class="button-secondary button-small">Theme</button>
+        <button type="button" id="logout-button" class="button-secondary button-small">Log out</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="page-title">
+      <div>
+        <h1 id="pet-name">Pet</h1>
+        <div id="pet-details" class="muted"></div>
+      </div>
+      <a class="button button-secondary" href="/pets.html">Back to my pets</a>
+    </div>
+
+    <div id="message" class="message hidden"></div>
+
+    <div class="grid-2">
+      <section class="card">
+        <h2>Medical records</h2>
+        <form id="record-form" novalidate>
+          <input type="hidden" id="record-id">
+          <div class="form-row">
+            <label>Type
+              <input type="text" id="record-type" maxlength="50" list="record-types" placeholder="e.g. Vaccination" required>
+              <datalist id="record-types">
+                <option value="Vaccination">
+                <option value="Check-up">
+                <option value="Surgery">
+                <option value="Medication">
+                <option value="Allergy">
+              </datalist>
+            </label>
+            <label>Date
+              <input type="date" id="record-date" required>
+            </label>
+          </div>
+          <label>Details
+            <textarea id="record-details" maxlength="2000"></textarea>
+          </label>
+          <div class="form-actions">
+            <button type="submit" id="record-save">Add record</button>
+            <button type="button" id="record-cancel" class="button-secondary hidden">Cancel</button>
+          </div>
+        </form>
+        <ul id="record-list" class="item-list"></ul>
+      </section>
+
+      <section class="card">
+        <h2>Reminders</h2>
+        <form id="reminder-form" novalidate>
+          <input type="hidden" id="reminder-id">
+          <div class="form-row">
+            <label>Title
+              <input type="text" id="reminder-title" maxlength="100" placeholder="e.g. Give medication" required>
+            </label>
+            <label>Due date
+              <input type="date" id="reminder-date" required>
+            </label>
+          </div>
+          <label>Notes
+            <textarea id="reminder-notes" maxlength="1000"></textarea>
+          </label>
+          <div class="form-actions">
+            <button type="submit" id="reminder-save">Add reminder</button>
+            <button type="button" id="reminder-cancel" class="button-secondary hidden">Cancel</button>
+          </div>
+        </form>
+        <ul id="reminder-list" class="item-list"></ul>
+      </section>
+    </div>
+  </main>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/pet.js"></script>
+</body>
+</html>

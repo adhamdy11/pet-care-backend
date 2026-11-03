@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Pets - PetCare</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/js/theme.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="logo" href="/dashboard.html">Pet<span>Care</span></a>
+      <nav class="main-nav">
+        <a href="/dashboard.html">Dashboard</a>
+        <a href="/pets.html" aria-current="page">My Pets</a>
+        <a href="/appointments.html">Appointments</a>
+        <a href="/admin.html" id="admin-link" class="hidden">Admin</a>
+      </nav>
+      <div class="header-user">
+        <span id="header-username"></span>
+        <button type="button" id="theme-button" class="button-secondary button-small">Theme</button>
+        <button type="button" id="logout-button" class="button-secondary button-small">Log out</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="page-title">
+      <h1>My Pets</h1>
+    </div>
+
+    <div id="message" class="message hidden"></div>
+
+    <section class="card">
+      <h2 id="form-title">Add a pet</h2>
+      <form id="pet-form" novalidate>
+        <input type="hidden" id="pet-id">
+        <div class="form-row">
+          <label>Name
+            <input type="text" id="name" maxlength="50" required>
+          </label>
+          <label>Species
+            <input type="text" id="species" maxlength="50" placeholder="e.g. Dog, Cat">
+          </label>
+        </div>
+        <div class="form-row">
+          <label>Breed
+            <input type="text" id="breed" maxlength="50">
+          </label>
+          <label>Age (years)
+            <input type="number" id="age" min="0" max="100" step="1">
+          </label>
+        </div>
+        <label>Notes
+          <textarea id="notes" maxlength="1000"></textarea>
+        </label>
+        <div class="form-actions">
+          <button type="submit" id="save-button">Add pet</button>
+          <button type="button" id="cancel-button" class="button-secondary hidden">Cancel</button>
+        </div>
+      </form>
+    </section>
+
+    <div id="pet-list" class="pet-grid"></div>
+  </main>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/pets.js"></script>
+</body>
+</html>
