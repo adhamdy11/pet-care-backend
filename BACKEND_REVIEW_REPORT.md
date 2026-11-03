@@ -748,7 +748,7 @@ ok 28 - login is rate limited per IP
 - **`npm audit`:** 11 vulnerabilities before, **0** after.
 
 ### 8.4 Not tested
-- **Windows.** The main testing was done on Linux. On the Windows laptop (3 Nov 2026) `npm install` worked and all 28 tests passed, but the test cleanup step failed with `EPERM` because the server still had the SQLite file open when the temp folder was deleted (Windows locks open files). The `after()` hook now waits for the server process to exit before deleting the folder. After this fix the tests were re-run on Linux (28/28 pass); the fix still needs to be confirmed on the Windows laptop.
+- **Windows.** The main testing was done on Linux. On the Windows laptop (3 Nov 2026) `npm install` worked and all 28 tests passed, but the test cleanup step failed with `EPERM` because the server still had the SQLite file open when the temp folder was deleted (Windows locks open files). The `after()` hook now waits for the server process to exit before deleting the folder. After this fix the tests were re-run on Linux and on the Windows laptop: 28 tests, 28 pass, 0 fail on both.
 - **HTTPS / Secure cookie in a real browser** – needs a deployed HTTPS server (cloud setup is part of the final submission).
 - **A real browser frontend** using the cookies and CSRF header – the frontend does not exist yet.
 - Load / performance testing and penetration testing with tools such as OWASP ZAP or Burp Suite.
@@ -845,7 +845,7 @@ These are in the report, not the code. Fix them before re-submitting so the repo
 - The rate limiter is in memory (resets on restart, per server). Behind a cloud proxy, `app.set('trust proxy', 1)` is needed so `req.ip` is the real client IP.
 - The CSP header must be relaxed when the frontend is served from this server.
 - No pagination on list endpoints.
-- Not tested on Windows (see 8.4).
+- Tested on Windows after one test-cleanup fix (see 8.4).
 
 ---
 
