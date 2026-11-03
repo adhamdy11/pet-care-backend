@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - PetCare</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/js/theme.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="logo" href="/dashboard.html">Pet<span>Care</span></a>
+      <nav class="main-nav">
+        <a href="/dashboard.html" aria-current="page">Dashboard</a>
+        <a href="/pets.html">My Pets</a>
+        <a href="/appointments.html">Appointments</a>
+        <a href="/admin.html" id="admin-link" class="hidden">Admin</a>
+      </nav>
+      <div class="header-user">
+        <span id="header-username"></span>
+        <button type="button" id="theme-button" class="button-secondary button-small">Theme</button>
+        <button type="button" id="logout-button" class="button-secondary button-small">Log out</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="page-title">
+      <h1 id="welcome">Dashboard</h1>
+      <a class="button" href="/appointments.html">Book an appointment</a>
+    </div>
+
+    <div id="message" class="message hidden"></div>
+
+    <div class="stats">
+      <div class="stat"><span class="number" id="stat-pets">0</span><span class="label">Pets</span></div>
+      <div class="stat"><span class="number" id="stat-upcoming">0</span><span class="label">Upcoming appointments</span></div>
+      <div class="stat"><span class="number" id="stat-open">0</span><span class="label">Open reminders</span></div>
+      <div class="stat"><span class="number" id="stat-overdue">0</span><span class="label">Overdue reminders</span></div>
+    </div>
+
+    <div class="grid-2">
+      <section class="card">
+        <h2>Upcoming appointments</h2>
+        <ul id="upcoming-list" class="item-list"></ul>
+      </section>
+      <section class="card">
+        <h2>Open reminders</h2>
+        <ul id="reminder-list" class="item-list"></ul>
+      </section>
+    </div>
+  </main>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/dashboard.js"></script>
+</body>
+</html>
