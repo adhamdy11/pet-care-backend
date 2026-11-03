@@ -54,9 +54,12 @@ before(async () => {
   throw new Error('Server did not start');
 });
 
-after(() => {
+after(async () => {
+  // Wait for the server to exit so Windows releases the SQLite file before we delete it.
+  const exited = new Promise((resolve) => server.once('exit', resolve));
   server.kill();
-  fs.rmSync(tmpDir, { recursive: true, force: true });
+  await exited;
+  fs.rmSync(tmpDir, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
 });
 
 const state = {};

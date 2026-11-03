@@ -748,7 +748,7 @@ ok 28 - login is rate limited per IP
 - **`npm audit`:** 11 vulnerabilities before, **0** after.
 
 ### 8.4 Not tested
-- **Windows.** All testing was done on Linux. sqlite3 6 downloads a prebuilt binary during `npm install`; if that ever fails on Windows, it would need the Visual Studio build tools. Run `npm install` and `npm test` on the laptop to confirm.
+- **Windows.** The main testing was done on Linux. On the Windows laptop (3 Nov 2026) `npm install` worked and all 28 tests passed, but the test cleanup step failed with `EPERM` because the server still had the SQLite file open when the temp folder was deleted (Windows locks open files). The `after()` hook now waits for the server process to exit before deleting the folder. After this fix the tests were re-run on Linux (28/28 pass); the fix still needs to be confirmed on the Windows laptop.
 - **HTTPS / Secure cookie in a real browser** – needs a deployed HTTPS server (cloud setup is part of the final submission).
 - **A real browser frontend** using the cookies and CSRF header – the frontend does not exist yet.
 - Load / performance testing and penetration testing with tools such as OWASP ZAP or Burp Suite.
