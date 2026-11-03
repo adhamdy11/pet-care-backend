@@ -1,12 +1,14 @@
-var express = require('express');
-var router = express.Router();
+const express = require('express');
+const petController = require('../controllers/petController');
+const { verifyToken } = require('../middleware/authMiddleware');
 
-var petController = require('../controllers/petController');
-var verifyToken = require('../middleware/authMiddleware').verifyToken;
+const router = express.Router();
 
-router.post('/', verifyToken, petController.createPet);
-router.get('/', verifyToken, petController.getMyPets);
-router.put('/:id', verifyToken, petController.updatePet);
-router.delete('/:id', verifyToken, petController.deletePet);
+router.use(verifyToken);
+
+router.post('/', petController.createPet);
+router.get('/', petController.getMyPets);
+router.put('/:id', petController.updatePet);
+router.delete('/:id', petController.deletePet);
 
 module.exports = router;

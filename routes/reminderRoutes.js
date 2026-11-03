@@ -1,10 +1,14 @@
-var express = require('express');
-var router = express.Router();
+const express = require('express');
+const reminderController = require('../controllers/reminderController');
+const { verifyToken } = require('../middleware/authMiddleware');
 
-var reminderController = require('../controllers/reminderController');
-var verifyToken = require('../middleware/authMiddleware').verifyToken;
+const router = express.Router();
 
-router.post('/', verifyToken, reminderController.createReminder);
-router.get('/pet/:petId', verifyToken, reminderController.getRemindersByPet);
+router.use(verifyToken);
+
+router.post('/', reminderController.createReminder);
+router.get('/pet/:petId', reminderController.getRemindersByPet);
+router.put('/:id', reminderController.updateReminder);
+router.delete('/:id', reminderController.deleteReminder);
 
 module.exports = router;
