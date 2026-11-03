@@ -1,66 +1,91 @@
-var bcrypt = require('bcryptjs');
-var jwt = require('jsonwebtoken');
-var db = require('../database/db').db;
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
+const { get, run } = require('../database/db');
+const { isNonEmptyString, isValidEmail, isStrongPassword } = require('../utils/validation');
+const { logAuthEvent } = require('../utils/authLogger');
 
-function signup(req, res) {
-  var username = req.body.username;
-  var email = req.body.email;
-  var password = req.body.password;
+const SESSION_HOURS = 2;
 
-  if (!username || !email || !password) {
-    return res.status(400).json({ error: "username, email, password are required" });
+const cookieOptions = {
+  secure: process.env.COOKIE_SECURE !== 'false',
+  sameSite: 'strict',
+  maxAge: SESSION_HOURS * 60 * 60 * 1000,
+  path: '/'
+};
+
+async function signup(req, res) {
+  const { username, email, password } = req.body;
+
+  if (!isNonEmptyString(username, 30)) {
+    return res.status(400).json({ error: 'username is required (max 30 characters)' });
+  }
+  if (!isValidEmail(email)) {
+    return res.status(400).json({ error: 'A valid email is required' });
+  }
+  if (!isStrongPassword(password)) {
+    return res.status(400).json({
+      error: 'password must be 8-72 characters and contain at least one letter and one number'
+    });
   }
 
-  var hashed = bcrypt.hashSync(password, 10);
+  const cleanEmail = email.trim().toLowerCase();
+  const hashedPassword = await bcrypt.hash(password, 10);
 
-  var sql = "INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, 'user')";
-  db.run(sql, [username, email, hashed], function(err) {
-    if (err) {
-      if (String(err.message).indexOf("UNIQUE") !== -1) {
-        return res.status(409).json({ error: "Email already exists" });
-      }
-      return res.status(500).json({ error: err.message });
+  try {
+    await run(
+      "INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, 'user')",
+      [username.trim(), cleanEmail, hashedPassword]
+    );
+  } catch (err) {
+    if (err.code === 'SQLITE_CONSTRAINT') {
+      logAuthEvent(req, 'SIGNUP_FAILED', cleanEmail);
+      return res.status(409).json({ error: 'Email already exists' });
     }
-    return res.status(201).json({ message: "User created successfully" });
-  });
+    throw err;
+  }
+
+  logAuthEvent(req, 'SIGNUP_SUCCESS', cleanEmail);
+  res.status(201).json({ message: 'User created successfully' });
 }
 
-function login(req, res) {
-  var email = req.body.email;
-  var password = req.body.password;
+async function login(req, res) {
+  const { email, password } = req.body;
 
-  if (!email || !password) {
-    return res.status(400).json({ error: "email and password are required" });
+  if (typeof email !== 'string' || typeof password !== 'string' || !email || !password) {
+    return res.status(400).json({ error: 'email and password are required' });
   }
 
-  db.get("SELECT * FROM users WHERE email = ?", [email], function(err, user) {
-    if (err) return res.status(500).json({ error: err.message });
-    if (!user) return res.status(401).json({ error: "Invalid credentials" });
+  const cleanEmail = email.trim().toLowerCase();
+  const user = await get('SELECT * FROM users WHERE email = ?', [cleanEmail]);
+  const passwordMatches = user ? await bcrypt.compare(password, user.password) : false;
 
-    var ok = bcrypt.compareSync(password, user.password);
-    if (!ok) return res.status(401).json({ error: "Invalid credentials" });
+  if (!passwordMatches) {
+    logAuthEvent(req, 'LOGIN_FAILED', cleanEmail);
+    return res.status(401).json({ error: 'Invalid credentials' });
+  }
 
-    var token = jwt.sign(
-      { id: user.id, email: user.email, role: user.role, username: user.username },
-      process.env.JWT_SECRET,
-      { expiresIn: '2h' }
-    );
-
-    return res.json({ message: "Login successful", token: token });
+  const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
+    expiresIn: SESSION_HOURS + 'h'
   });
+  const csrfToken = crypto.randomBytes(32).toString('hex');
+
+  res.cookie('token', token, { ...cookieOptions, httpOnly: true });
+  res.cookie('csrfToken', csrfToken, { ...cookieOptions, httpOnly: false });
+
+  logAuthEvent(req, 'LOGIN_SUCCESS', cleanEmail);
+  res.json({ message: 'Login successful', token: token, csrfToken: csrfToken });
+}
+
+function logout(req, res) {
+  res.clearCookie('token', { ...cookieOptions, httpOnly: true });
+  res.clearCookie('csrfToken', cookieOptions);
+  logAuthEvent(req, 'LOGOUT', null);
+  res.json({ message: 'Logged out' });
 }
 
 function me(req, res) {
-  db.get("SELECT id, username, email, role FROM users WHERE id = ?", [req.user.id], function(err, row) {
-    if (err) return res.status(500).json({ error: err.message });
-    if (!row) return res.status(404).json({ error: "User not found" });
-
-    return res.json({ message: "User profile fetched", user: row });
-  });
+  res.json({ message: 'User profile fetched', user: req.user });
 }
 
-module.exports = {
-  signup: signup,
-  login: login,
-  me: me
-};
+module.exports = { signup, login, logout, me };

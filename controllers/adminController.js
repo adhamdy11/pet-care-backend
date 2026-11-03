@@ -1,29 +1,33 @@
-var db = require('../database/db').db;
+const { all, run } = require('../database/db');
+const { toId } = require('../utils/validation');
+const { logAuthEvent } = require('../utils/authLogger');
 
-function getAllUsers(req, res) {
-  db.all("SELECT id, username, email, role FROM users", [], function(err, rows) {
-    if (err) return res.status(500).json({ error: err.message });
-    return res.json({ message: "All users fetched", users: rows });
-  });
+async function getAllUsers(req, res) {
+  const users = await all('SELECT id, username, email, role FROM users ORDER BY id');
+  res.json({ message: 'All users fetched', users: users });
 }
 
-function updateRole(req, res) {
-  var id = req.params.id;
-  var role = req.body.role;
+async function updateRole(req, res) {
+  const id = toId(req.params.id);
+  const role = req.body.role;
 
-  if (!role || (role !== 'user' && role !== 'admin')) {
+  if (!id) {
+    return res.status(400).json({ error: 'Invalid user id' });
+  }
+  if (role !== 'user' && role !== 'admin') {
     return res.status(400).json({ error: "role must be 'user' or 'admin'" });
   }
+  if (id === req.user.id) {
+    return res.status(400).json({ error: 'You cannot change your own role' });
+  }
 
-  db.run("UPDATE users SET role = ? WHERE id = ?", [role, id], function(err) {
-    if (err) return res.status(500).json({ error: err.message });
-    if (this.changes === 0) return res.status(404).json({ error: "User not found" });
+  const result = await run('UPDATE users SET role = ? WHERE id = ?', [role, id]);
+  if (result.changes === 0) {
+    return res.status(404).json({ error: 'User not found' });
+  }
 
-    return res.json({ message: "User role updated" });
-  });
+  logAuthEvent(req, 'ROLE_CHANGED user_id=' + id + ' role=' + role, req.user.email);
+  res.json({ message: 'User role updated' });
 }
 
-module.exports = {
-  getAllUsers: getAllUsers,
-  updateRole: updateRole
-};
+module.exports = { getAllUsers, updateRole };

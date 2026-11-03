@@ -1,11 +1,14 @@
-var express = require('express');
-var router = express.Router();
+const express = require('express');
+const adminController = require('../controllers/adminController');
+const { verifyToken } = require('../middleware/authMiddleware');
+const { requireAdmin } = require('../middleware/adminMiddleware');
 
-var adminController = require('../controllers/adminController');
-var verifyToken = require('../middleware/authMiddleware').verifyToken;
-var requireAdmin = require('../middleware/adminMiddleware').requireAdmin;
+const router = express.Router();
 
-router.get('/all-users', verifyToken, requireAdmin, adminController.getAllUsers);
-router.put('/update-role/:id', verifyToken, requireAdmin, adminController.updateRole);
+// Every admin route needs a logged-in user with the admin role.
+router.use(verifyToken, requireAdmin);
+
+router.get('/all-users', adminController.getAllUsers);
+router.put('/update-role/:id', adminController.updateRole);
 
 module.exports = router;
