@@ -1,6 +1,6 @@
-# Pet Care Management System – Backend
+# Pet Care Management System
 
-Backend API for the Pet Care Management System, built for the KH5041CMD *Internet and Web Technologies* coursework. Pet owners can register, log in, and manage their pets, vet/grooming appointments, medical records and care reminders. Admins can view all users and change user roles. The API is built with Node.js and Express, stores data in SQLite, hashes passwords with bcrypt and uses JWTs for login sessions (sent as an HttpOnly cookie or a Bearer header). The frontend has not been built yet.
+Web application for managing pet care, built for the KH5041CMD *Internet and Web Technologies* coursework. Pet owners can register, log in, and manage their pets, vet/grooming appointments, medical records and care reminders. Admins can view all users and change user roles. The API is built with Node.js and Express, stores data in SQLite, hashes passwords with bcrypt and uses JWTs for login sessions (sent as an HttpOnly cookie or a Bearer header). The frontend is plain HTML, CSS and JavaScript in the `public` folder, served by the same Express server, with no frontend framework or library.
 
 ## Requirements
 
@@ -26,7 +26,7 @@ Then start the server:
 npm start          # or: npm run dev  (restarts on file changes)
 ```
 
-The API runs on `http://localhost:3000`. The SQLite database (`database/petcare.sqlite`) and the auth log (`logs/auth.log`) are created automatically.
+Open `http://localhost:3000` in a browser to use the app. For local testing over plain http set `COOKIE_SECURE=false` in `.env`. The API health check is at `/health`. The SQLite database (`database/petcare.sqlite`) and the auth log (`logs/auth.log`) are created automatically.
 
 ### Creating the first admin
 
@@ -69,6 +69,20 @@ Dates use the format `YYYY-MM-DD`. Passwords must be 8–72 characters with at l
 
 **Authentication:** Postman and other API clients can send `Authorization: Bearer <token>`. A browser uses the HttpOnly `token` cookie instead; for POST/PUT/DELETE requests it must also send the `X-CSRF-Token` header with the value of the `csrfToken` cookie.
 
+## Frontend pages
+
+| Page | What it does |
+| --- | --- |
+| `index.html` | Landing page (opens the dashboard if you are already logged in) |
+| `signup.html`, `login.html` | Sign up and log in, with the same validation rules as the backend |
+| `dashboard.html` | Counts, upcoming appointments and open/overdue reminders |
+| `pets.html` | Add, edit and delete pets |
+| `pet.html?id=…` | Medical records and reminders for one pet |
+| `appointments.html` | Book, edit, complete and delete appointments |
+| `admin.html` | Admins only: list users and change roles |
+
+Every page loads `js/api.js`, which sends requests with `fetch`, adds the `X-CSRF-Token` header to POST/PUT/DELETE requests and sends the user to the login page when the session has expired. The login token stays in the HttpOnly cookie and is never stored by JavaScript. All user data is put on the page with `textContent`, never `innerHTML`, so typed HTML is shown as text. The light/dark theme choice is saved in a non-sensitive `theme` cookie.
+
 ## Third-party packages
 
 | Package | Purpose |
@@ -80,7 +94,7 @@ Dates use the format `YYYY-MM-DD`. Passwords must be 8–72 characters with at l
 | cors | Controls which frontend origin may call the API |
 | dotenv | Loads settings from the `.env` file |
 
-Tests use Node's built-in test runner (`node:test`), so no testing package is needed.
+Tests use Node's built-in test runner (`node:test`), so no testing package is needed. The frontend uses no third-party plugins or UI libraries.
 
 ## Project structure
 
@@ -92,6 +106,7 @@ database/      SQLite connection, Promise helpers and table creation
 utils/         input validation and authentication event logging
 scripts/       make-admin helper
 tests/         automated API tests
+public/        frontend: HTML pages, css/style.css and js/ (one script per page + api.js)
 ```
 
 ## Security tools and testing

@@ -776,7 +776,8 @@ ok 28 - login is rate limited per IP
 | Multiple commits showing progress | ⚠️ the original history is one commit and cannot honestly be changed; this branch adds several real commits – keep committing regularly from now on |
 | Data encryption at rest | ❌ SQLite file is not encrypted (see limitations) |
 | HTTPS / secure communication, cloud setup | ❌ deployment task, not backend code |
-| Frontend, frontend validation, pen-testing | ❌ later milestones – intentionally not done here |
+| Frontend (HTML/CSS/JS), frontend validation, responsive design | ✅ added afterwards in `public/` – see section 13 |
+| Penetration testing | ❌ still to do (Milestone 5) |
 
 ---
 
@@ -791,7 +792,7 @@ These are in the report, not the code. Fix them before re-submitting so the repo
 5. **Screenshots are mislabelled:** "Pet Creation" shows a signup request; "GET Appointment" shows a POST; "Adding Records" and "GET Records" show `/appointments`; "GET Reminder" shows a POST. The signup uses `adham@tests.com` but login uses `adham@test.com`.
 6. **Template leftovers:** "Use Case #1: [Share Playlist]", "[figure 1 caption]", "[Submission Date]", and references to the Spotify and Apple Music APIs, which are unrelated to this project.
 7. **Section 6.3 "Authentication Technologies"** actually describes Postman.
-8. **Section 7.2** says a `public` folder contains the frontend files; there is no `public` folder.
+8. **Section 7.2** says a `public` folder contains the frontend files; at the time of the review there was none (it exists now – section 13).
 9. **Use case diagram:** the Admin side shows "Manage Reminders" twice with an include arrow; it should show admin use cases (View All Users, Update User Role).
 10. **Security section** says inputs are validated – this is now true, but was not in the submitted code.
 11. **New in this version** (should be added to the report): cookies, CSRF token, logout, security headers, rate limiting, auth log, `PUT/DELETE` for records and reminders, password policy, `make-admin` script, automated tests.
@@ -843,7 +844,7 @@ These are in the report, not the code. Fix them before re-submitting so the repo
 - **No encryption at rest:** the SQLite file is plain (passwords are hashed). Full encryption would need SQLCipher or disk encryption.
 - **Signup reveals whether an email is registered** (409). Common trade-off for usability.
 - The rate limiter is in memory (resets on restart, per server). Behind a cloud proxy, `app.set('trust proxy', 1)` is needed so `req.ip` is the real client IP.
-- The CSP header must be relaxed when the frontend is served from this server.
+- The frontend does not use the token from the login JSON, so it could now be removed from the response (kept for Postman).
 - No pagination on list endpoints.
 - Tested on Windows after one test-cleanup fix (see 8.4).
 
@@ -857,7 +858,31 @@ So that it can be disclosed accurately to the lecturer:
 - The AI **cloned the repository, read and ran the original code, wrote all the changed and new code in this branch, wrote the tests, ran them, and wrote this report and the README.**
 - The student provided the requirements (assignment brief, original report and a detailed task description) and decides what to keep.
 - Every commit on the `backend-review-refactor` branch carries a `Co-Authored-By: Claude` line, so the Git history shows which work involved AI assistance. No commits were backdated and the original `main` history was not changed.
-- Nothing was pushed to GitHub.
+- The branch was pushed to GitHub only after the student approved it. `main` was not changed.
 - The AI did not judge who wrote the original code; section 3 lists observations only.
 
 The student should read through every file and section 7 before the discussion, and be ready to explain any line in their own words.
+
+---
+
+## 13. Frontend (added after the backend review)
+
+The frontend was added on the same branch after the backend review, as plain HTML, CSS and JavaScript with no framework or third-party library.
+
+**How it fits the backend**
+- `server.js` serves the `public` folder with `express.static`, so pages and API share one origin. Cookies work without CORS, and `SameSite=Strict` is not a problem. The JSON health check moved from `/` to `/health` because `/` now serves `index.html`.
+- `middleware/securityHeaders.js`: the CSP changed from `default-src 'none'` (API only) to `default-src 'self'; script-src 'self'; style-src 'self'; …`. Pages may only load files from this server, and inline scripts and styles are blocked, so the HTML has no `<script>` code or `style=""` attributes.
+
+**Key points to explain**
+- `public/js/api.js` holds the shared `fetch` wrapper. It reads the `csrfToken` cookie and sends it as `X-CSRF-Token` on POST/PUT/DELETE (double-submit cookie). On a 401 it redirects to the login page. It never stores the JWT, which stays in the HttpOnly cookie where JavaScript cannot read it.
+- Each protected page first calls `GET /auth/me` (`requireLogin()`). The Admin link is shown only to admins, but that is only for convenience. The real protection is the server's `requireAdmin` check.
+- **XSS prevention:** all user data is added with `textContent` or `createElement`, never `innerHTML` with user values. This was tested with a pet named `<img src=x onerror=alert(1)>`, which was shown as text, and no script ran.
+- **Frontend validation** in `signup.js` and the page scripts repeats the backend rules for fast feedback. The backend still validates everything.
+- **Preference cookie:** `theme` (light/dark), set with `SameSite=Strict`, one-year `Max-Age` and `Secure` on HTTPS. It holds no sensitive data, so it is deliberately readable by JavaScript.
+- The same form is used for adding and editing. A hidden id field decides between POST and PUT.
+
+**Testing (actually run on 3 Nov 2026, Chromium via Playwright, Linux)**
+- `npm test`: 29 tests, 29 pass, 0 fail. New tests check that `/` serves HTML with the strict CSP and that `/health` replaces `/` as the health check.
+- A browser walkthrough of 35 checks, all passed: signup validation (bad email, weak password, mismatch, duplicate email); redirect to login when logged out; wrong password; cookie flags (token HttpOnly + SameSite=Strict, JS cannot read it, nothing in localStorage); pets add/edit/delete; XSS name shown as text; records add/edit; reminders add, overdue badge, mark done; unknown pet id; appointments book/complete/edit with pet names; dashboard counts; a normal user redirected from the admin page; admin role change, with no option to change their own role; theme cookie kept after reload; no horizontal scroll at 375 px phone width; logout clears cookies; no CSP violations or JavaScript errors.
+- The walkthrough script is not part of the repository, because it needs Playwright, which is not a project dependency.
+- **Not tested:** browsers other than Chromium, and running over real HTTPS.
