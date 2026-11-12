@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Appointments - PetCare</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/js/theme.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="logo" href="/dashboard.html">Pet<span>Care</span></a>
+      <nav class="main-nav">
+        <a href="/dashboard.html">Dashboard</a>
+        <a href="/pets.html">My Pets</a>
+        <a href="/appointments.html" aria-current="page">Appointments</a>
+        <a href="/admin.html" id="admin-link" class="hidden">Admin</a>
+      </nav>
+      <div class="header-user">
+        <span id="header-username"></span>
+        <button type="button" id="theme-button" class="button-secondary button-small">Theme</button>
+        <button type="button" id="logout-button" class="button-secondary button-small">Log out</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="page-title">
+      <h1>Appointments</h1>
+    </div>
+
+    <div id="message" class="message hidden"></div>
+
+    <section class="card" id="form-card">
+      <h2 id="form-title">Book an appointment</h2>
+      <p id="no-pets" class="hidden">You need to <a href="/pets.html">add a pet</a> before booking an appointment.</p>
+      <form id="appointment-form" novalidate>
+        <input type="hidden" id="appointment-id">
+        <div class="form-row">
+          <label>Pet
+            <select id="pet" required></select>
+          </label>
+          <label>Date
+            <input type="date" id="date" required>
+          </label>
+        </div>
+        <div class="form-row">
+          <label>Type
+            <input type="text" id="type" maxlength="50" list="appointment-types" placeholder="e.g. Vet visit" required>
+            <datalist id="appointment-types">
+              <option value="Vet visit">
+              <option value="Vaccination">
+              <option value="Grooming">
+              <option value="Check-up">
+            </datalist>
+          </label>
+          <label>Status
+            <select id="status">
+              <option value="scheduled">Scheduled</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </label>
+        </div>
+        <label>Notes
+          <textarea id="notes" maxlength="1000"></textarea>
+        </label>
+        <div class="form-actions">
+          <button type="submit" id="save-button">Book appointment</button>
+          <button type="button" id="cancel-button" class="button-secondary hidden">Cancel</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>All appointments</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Pet</th>
+              <th>Type</th>
+              <th>Status</th>
+              <th>Notes</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="appointment-rows"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/appointments.js"></script>
+</body>
+</html>

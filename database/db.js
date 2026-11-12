@@ -1,80 +1,114 @@
-var sqlite3 = require('sqlite3').verbose();
-var path = require('path');
+const mysql = require('mysql2/promise');
 
-var dbPath = path.join(__dirname, 'petcare.sqlite');
-var db = new sqlite3.Database(dbPath);
+const dbName = process.env.DB_NAME || 'petcare';
 
-function initDb() {
-  db.serialize(function() {
-    db.run("PRAGMA foreign_keys = ON;");
+const connectionSettings = {
+  host: process.env.DB_HOST || 'localhost',
+  port: Number(process.env.DB_PORT) || 3306,
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD || '',
+  // Cloud databases like TiDB Cloud only accept encrypted (TLS) connections.
+  ssl: process.env.DB_SSL === 'true' ? { minVersion: 'TLSv1.2', rejectUnauthorized: true } : undefined
+};
 
-    db.run(
-      "CREATE TABLE IF NOT EXISTS users (" +
-        "id INTEGER PRIMARY KEY AUTOINCREMENT," +
-        "username TEXT NOT NULL," +
-        "email TEXT NOT NULL UNIQUE," +
-        "password TEXT NOT NULL," +
-        "role TEXT NOT NULL DEFAULT 'user'" +
-      ");"
-    );
+// A pool keeps a few connections open and reuses them, instead of opening
+// a new connection for every request.
+// dateStrings: DATE columns come back as 'YYYY-MM-DD' text instead of JS Date objects.
+const pool = mysql.createPool({
+  ...connectionSettings,
+  database: dbName,
+  dateStrings: true,
+  connectionLimit: 10
+});
 
-    db.run(
-      "CREATE TABLE IF NOT EXISTS pets (" +
-        "id INTEGER PRIMARY KEY AUTOINCREMENT," +
-        "user_id INTEGER NOT NULL," +
-        "name TEXT NOT NULL," +
-        "species TEXT," +
-        "breed TEXT," +
-        "age INTEGER," +
-        "notes TEXT," +
-        "FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE" +
-      ");"
-    );
-
-    db.run(
-      "CREATE TABLE IF NOT EXISTS appointments (" +
-        "id INTEGER PRIMARY KEY AUTOINCREMENT," +
-        "user_id INTEGER NOT NULL," +
-        "pet_id INTEGER NOT NULL," +
-        "date TEXT NOT NULL," +
-        "type TEXT NOT NULL," +
-        "notes TEXT," +
-        "status TEXT NOT NULL DEFAULT 'scheduled'," +
-        "FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE," +
-        "FOREIGN KEY(pet_id) REFERENCES pets(id) ON DELETE CASCADE" +
-      ");"
-    );
-
-    db.run(
-      "CREATE TABLE IF NOT EXISTS medical_records (" +
-        "id INTEGER PRIMARY KEY AUTOINCREMENT," +
-        "user_id INTEGER NOT NULL," +
-        "pet_id INTEGER NOT NULL," +
-        "record_type TEXT NOT NULL," +
-        "record_date TEXT NOT NULL," +
-        "details TEXT," +
-        "FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE," +
-        "FOREIGN KEY(pet_id) REFERENCES pets(id) ON DELETE CASCADE" +
-      ");"
-    );
-
-    db.run(
-      "CREATE TABLE IF NOT EXISTS reminders (" +
-        "id INTEGER PRIMARY KEY AUTOINCREMENT," +
-        "user_id INTEGER NOT NULL," +
-        "pet_id INTEGER NOT NULL," +
-        "title TEXT NOT NULL," +
-        "due_date TEXT NOT NULL," +
-        "notes TEXT," +
-        "is_done INTEGER NOT NULL DEFAULT 0," +
-        "FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE," +
-        "FOREIGN KEY(pet_id) REFERENCES pets(id) ON DELETE CASCADE" +
-      ");"
-    );
-  });
+// For INSERT / UPDATE / DELETE. Returns insertId and affectedRows.
+async function run(sql, params = []) {
+  const [result] = await pool.execute(sql, params);
+  return result;
 }
 
-module.exports = {
-  db: db,
-  initDb: initDb
-};
+// Returns the first matching row, or undefined.
+async function get(sql, params = []) {
+  const [rows] = await pool.execute(sql, params);
+  return rows[0];
+}
+
+// Returns all matching rows.
+async function all(sql, params = []) {
+  const [rows] = await pool.execute(sql, params);
+  return rows;
+}
+
+async function initDb() {
+  // The database has to exist before the pool can use it, so this first
+  // connection is made without choosing a database.
+  const connection = await mysql.createConnection(connectionSettings);
+  await connection.query('CREATE DATABASE IF NOT EXISTS `' + dbName + '`');
+  await connection.end();
+
+  await run(`
+    CREATE TABLE IF NOT EXISTS users (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      username VARCHAR(30) NOT NULL,
+      email VARCHAR(254) NOT NULL UNIQUE,
+      password VARCHAR(100) NOT NULL,
+      role ENUM('user', 'admin') NOT NULL DEFAULT 'user'
+    )
+  `);
+
+  await run(`
+    CREATE TABLE IF NOT EXISTS pets (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      user_id INT NOT NULL,
+      name VARCHAR(50) NOT NULL,
+      species VARCHAR(50),
+      breed VARCHAR(50),
+      age INT,
+      notes TEXT,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
+
+  await run(`
+    CREATE TABLE IF NOT EXISTS appointments (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      user_id INT NOT NULL,
+      pet_id INT NOT NULL,
+      date DATE NOT NULL,
+      type VARCHAR(50) NOT NULL,
+      notes TEXT,
+      status ENUM('scheduled', 'completed', 'cancelled') NOT NULL DEFAULT 'scheduled',
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE CASCADE
+    )
+  `);
+
+  await run(`
+    CREATE TABLE IF NOT EXISTS medical_records (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      user_id INT NOT NULL,
+      pet_id INT NOT NULL,
+      record_type VARCHAR(50) NOT NULL,
+      record_date DATE NOT NULL,
+      details TEXT,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE CASCADE
+    )
+  `);
+
+  await run(`
+    CREATE TABLE IF NOT EXISTS reminders (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      user_id INT NOT NULL,
+      pet_id INT NOT NULL,
+      title VARCHAR(100) NOT NULL,
+      due_date DATE NOT NULL,
+      notes TEXT,
+      is_done BOOLEAN NOT NULL DEFAULT FALSE,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE CASCADE
+    )
+  `);
+}
+
+module.exports = { pool, run, get, all, initDb };

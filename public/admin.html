@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - PetCare</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/js/theme.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="logo" href="/dashboard.html">Pet<span>Care</span></a>
+      <nav class="main-nav">
+        <a href="/dashboard.html">Dashboard</a>
+        <a href="/pets.html">My Pets</a>
+        <a href="/appointments.html">Appointments</a>
+        <a href="/admin.html" id="admin-link" class="hidden" aria-current="page">Admin</a>
+      </nav>
+      <div class="header-user">
+        <span id="header-username"></span>
+        <button type="button" id="theme-button" class="button-secondary button-small">Theme</button>
+        <button type="button" id="logout-button" class="button-secondary button-small">Log out</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="page-title">
+      <h1>User management</h1>
+    </div>
+
+    <div id="message" class="message hidden"></div>
+
+    <section class="card">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Username</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="user-rows"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/admin.js"></script>
+</body>
+</html>

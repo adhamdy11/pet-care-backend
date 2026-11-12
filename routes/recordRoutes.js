@@ -1,10 +1,14 @@
-var express = require('express');
-var router = express.Router();
+const express = require('express');
+const recordController = require('../controllers/recordController');
+const { verifyToken } = require('../middleware/authMiddleware');
 
-var recordController = require('../controllers/recordController');
-var verifyToken = require('../middleware/authMiddleware').verifyToken;
+const router = express.Router();
 
-router.post('/', verifyToken, recordController.addRecord);
-router.get('/pet/:petId', verifyToken, recordController.getRecordsByPet);
+router.use(verifyToken);
+
+router.post('/', recordController.addRecord);
+router.get('/pet/:petId', recordController.getRecordsByPet);
+router.put('/:id', recordController.updateRecord);
+router.delete('/:id', recordController.deleteRecord);
 
 module.exports = router;
