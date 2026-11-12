@@ -1,7 +1,7 @@
 // Every signup gets the 'user' role, so the first admin has to be created here.
 // Usage: npm run make-admin -- someone@example.com
 require('dotenv').config();
-const { initDb, run } = require('../database/db');
+const { initDb, run, pool } = require('../database/db');
 
 const email = process.argv[2];
 
@@ -13,12 +13,12 @@ if (!email) {
 initDb()
   .then(() => run("UPDATE users SET role = 'admin' WHERE email = ?", [email.trim().toLowerCase()]))
   .then((result) => {
-    if (result.changes === 0) {
+    if (result.affectedRows === 0) {
       console.log('No user found with that email. Sign up first.');
-      process.exit(1);
+    } else {
+      console.log(email + ' is now an admin.');
     }
-    console.log(email + ' is now an admin.');
-    process.exit(0);
+    return pool.end();
   })
   .catch((err) => {
     console.error(err);

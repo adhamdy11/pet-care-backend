@@ -25,7 +25,7 @@ async function createPet(req, res) {
     'INSERT INTO pets (user_id, name, species, breed, age, notes) VALUES (?, ?, ?, ?, ?, ?)',
     [req.user.id, pet.name, pet.species ?? null, pet.breed ?? null, pet.age ?? null, pet.notes ?? null]
   );
-  res.status(201).json({ message: 'Pet created', id: result.lastID });
+  res.status(201).json({ message: 'Pet created', id: result.insertId });
 }
 
 async function getMyPets(req, res) {
@@ -57,7 +57,7 @@ async function deletePet(req, res) {
   if (!id) return res.status(400).json({ error: 'Invalid pet id' });
 
   const result = await run('DELETE FROM pets WHERE id = ? AND user_id = ?', [id, req.user.id]);
-  if (result.changes === 0) return res.status(404).json({ error: 'Pet not found' });
+  if (result.affectedRows === 0) return res.status(404).json({ error: 'Pet not found' });
 
   res.json({ message: 'Pet deleted' });
 }

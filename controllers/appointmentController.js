@@ -29,7 +29,7 @@ async function createAppointment(req, res) {
     'INSERT INTO appointments (user_id, pet_id, date, type, notes, status) VALUES (?, ?, ?, ?, ?, ?)',
     [req.user.id, petId, appointment.date, appointment.type, appointment.notes ?? null, appointment.status ?? 'scheduled']
   );
-  res.status(201).json({ message: 'Appointment created', id: result.lastID });
+  res.status(201).json({ message: 'Appointment created', id: result.insertId });
 }
 
 async function getMyAppointments(req, res) {
@@ -63,7 +63,7 @@ async function deleteAppointment(req, res) {
   if (!id) return res.status(400).json({ error: 'Invalid appointment id' });
 
   const result = await run('DELETE FROM appointments WHERE id = ? AND user_id = ?', [id, req.user.id]);
-  if (result.changes === 0) return res.status(404).json({ error: 'Appointment not found' });
+  if (result.affectedRows === 0) return res.status(404).json({ error: 'Appointment not found' });
 
   res.json({ message: 'Appointment deleted' });
 }

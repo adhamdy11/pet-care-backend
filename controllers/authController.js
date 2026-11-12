@@ -38,7 +38,7 @@ async function signup(req, res) {
       [username.trim(), cleanEmail, hashedPassword]
     );
   } catch (err) {
-    if (err.code === 'SQLITE_CONSTRAINT') {
+    if (err.code === 'ER_DUP_ENTRY') {
       logAuthEvent(req, 'SIGNUP_FAILED', cleanEmail);
       return res.status(409).json({ error: 'Email already exists' });
     }

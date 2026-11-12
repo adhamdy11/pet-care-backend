@@ -1,11 +1,12 @@
 # Pet Care Management System
 
-Web application for managing pet care, built for the KH5041CMD *Internet and Web Technologies* coursework. Pet owners can register, log in, and manage their pets, vet/grooming appointments, medical records and care reminders. Admins can view all users and change user roles. The API is built with Node.js and Express, stores data in SQLite, hashes passwords with bcrypt and uses JWTs for login sessions (sent as an HttpOnly cookie or a Bearer header). The frontend is plain HTML, CSS and JavaScript in the `public` folder, served by the same Express server, with no frontend framework or library.
+Web application for managing pet care, built for the KH5041CMD *Internet and Web Technologies* coursework. Pet owners can register, log in, and manage their pets, vet/grooming appointments, medical records and care reminders. Admins can view all users and change user roles. The API is built with Node.js and Express, stores data in MySQL, hashes passwords with bcrypt and uses JWTs for login sessions (sent as an HttpOnly cookie or a Bearer header). The frontend is plain HTML, CSS and JavaScript in the `public` folder, served by the same Express server, with no frontend framework or library.
 
 ## Requirements
 
 - Node.js 20.17 or newer
 - npm
+- MySQL 8 (or MariaDB, e.g. from XAMPP) running locally
 
 ## Running the project
 
@@ -14,7 +15,7 @@ npm install
 cp .env.example .env        # on Windows: copy .env.example .env
 ```
 
-Open `.env` and set `JWT_SECRET` to a long random value, for example the output of:
+Open `.env`, fill in your MySQL details (`DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`) and set `JWT_SECRET` to a long random value, for example the output of:
 
 ```bash
 node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
@@ -26,7 +27,7 @@ Then start the server:
 npm start          # or: npm run dev  (restarts on file changes)
 ```
 
-Open `http://localhost:3000` in a browser to use the app. For local testing over plain http set `COOKIE_SECURE=false` in `.env`. The API health check is at `/health`. The SQLite database (`database/petcare.sqlite`) and the auth log (`logs/auth.log`) are created automatically.
+Open `http://localhost:3000` in a browser to use the app. For local testing over plain http set `COOKIE_SECURE=false` in `.env`. The API health check is at `/health`. On the first start the server creates the `petcare` database and all tables in MySQL by itself. The auth log (`logs/auth.log`) is also created automatically.
 
 ### Creating the first admin
 
@@ -35,14 +36,6 @@ Every new account is a normal user. To make an account an admin, sign up first a
 ```bash
 npm run make-admin -- someone@example.com
 ```
-
-### Running the tests
-
-```bash
-npm test
-```
-
-The tests start the server on port 3999 with a temporary database, so they do not touch your real data.
 
 ## API overview
 
@@ -88,27 +81,26 @@ Every page loads `js/api.js`, which sends requests with `fetch`, adds the `X-CSR
 | Package | Purpose |
 | --- | --- |
 | express | Web server and routing |
-| sqlite3 | SQLite database driver |
+| mysql2 | MySQL database driver (used with async/await) |
 | bcryptjs | Password hashing |
 | jsonwebtoken | Creating and checking login tokens (JWT) |
 | cors | Controls which frontend origin may call the API |
 | dotenv | Loads settings from the `.env` file |
 
-Tests use Node's built-in test runner (`node:test`), so no testing package is needed. The frontend uses no third-party plugins or UI libraries.
+The frontend uses no third-party plugins or UI libraries.
 
 ## Project structure
 
 ```
 controllers/   request handling and business logic for each feature
 routes/        maps URLs to controller functions
-middleware/    login check, admin check, security headers, login rate limit
-database/      SQLite connection, Promise helpers and table creation
+middleware/    login check (JWT + CSRF) and admin check
+database/      MySQL connection pool, query helpers and table creation
 utils/         input validation and authentication event logging
 scripts/       make-admin helper
-tests/         automated API tests
 public/        frontend: HTML pages, css/style.css and js/ (one script per page + api.js)
 ```
 
 ## Security tools and testing
 
-Security testing so far: automated API tests (`npm test`) covering authentication, ownership checks, input validation, CSRF, rate limiting and SQL injection attempts, plus `npm audit` for dependency vulnerabilities. Penetration testing for the final submission is still to be done. See `BACKEND_REVIEW_REPORT.md` for the full review.
+Security testing so far: manual testing of authentication, ownership checks, input validation, CSRF and SQL injection attempts with Postman and the browser, plus `npm audit` for dependency vulnerabilities. Penetration testing for the final submission is still to be done.

@@ -28,7 +28,7 @@ async function createReminder(req, res) {
     'INSERT INTO reminders (user_id, pet_id, title, due_date, notes, is_done) VALUES (?, ?, ?, ?, ?, ?)',
     [req.user.id, petId, reminder.title, reminder.due_date, reminder.notes ?? null, reminder.is_done ? 1 : 0]
   );
-  res.status(201).json({ message: 'Reminder created', id: result.lastID });
+  res.status(201).json({ message: 'Reminder created', id: result.insertId });
 }
 
 async function getRemindersByPet(req, res) {
@@ -68,7 +68,7 @@ async function deleteReminder(req, res) {
   if (!id) return res.status(400).json({ error: 'Invalid reminder id' });
 
   const result = await run('DELETE FROM reminders WHERE id = ? AND user_id = ?', [id, req.user.id]);
-  if (result.changes === 0) return res.status(404).json({ error: 'Reminder not found' });
+  if (result.affectedRows === 0) return res.status(404).json({ error: 'Reminder not found' });
 
   res.json({ message: 'Reminder deleted' });
 }

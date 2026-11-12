@@ -25,7 +25,7 @@ async function addRecord(req, res) {
     'INSERT INTO medical_records (user_id, pet_id, record_type, record_date, details) VALUES (?, ?, ?, ?, ?)',
     [req.user.id, petId, record.record_type, record.record_date, record.details ?? null]
   );
-  res.status(201).json({ message: 'Medical record added', id: result.lastID });
+  res.status(201).json({ message: 'Medical record added', id: result.insertId });
 }
 
 async function getRecordsByPet(req, res) {
@@ -65,7 +65,7 @@ async function deleteRecord(req, res) {
   if (!id) return res.status(400).json({ error: 'Invalid record id' });
 
   const result = await run('DELETE FROM medical_records WHERE id = ? AND user_id = ?', [id, req.user.id]);
-  if (result.changes === 0) return res.status(404).json({ error: 'Record not found' });
+  if (result.affectedRows === 0) return res.status(404).json({ error: 'Record not found' });
 
   res.json({ message: 'Medical record deleted' });
 }

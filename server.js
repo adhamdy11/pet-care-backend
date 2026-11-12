@@ -4,7 +4,6 @@ const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const { initDb } = require('./database/db');
-const securityHeaders = require('./middleware/securityHeaders');
 
 const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require('./routes/adminRoutes');
@@ -19,9 +18,6 @@ if (!process.env.JWT_SECRET) {
 }
 
 const app = express();
-
-app.disable('x-powered-by');
-app.use(securityHeaders);
 
 // Only the frontend origin in CLIENT_ORIGIN may call the API from a browser.
 // If it is not set, cross-origin browser requests are not allowed at all.
